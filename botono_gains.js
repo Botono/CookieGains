@@ -4,8 +4,10 @@
 	var cursorAmount = Game.Objects['Cursor'].amount;
 	
 	function botono_startClicking() {
+		Game.Objects['Cursor'].sell(cursorAmount); // Sell all cursors
 		botono_Interval = setInterval(botono_click, 1);
 		setTimeout(botono_stopClicking, 10000);
+		Game.Objects['Cursor'].buy(cursorAmount); // Buy all cursors back
 	}
 
 	function botono_stopClicking() {
@@ -16,9 +18,5 @@
 		botono_bigCookie.click();
 	}
 
-	Game.Objects['Cursor'].sell(cursorAmount); // Sell all cursors
-
-	botono_startClicking();
-
-	Game.Objects['Cursor'].buy(cursorAmount); // Buy all cursors back
+	setTimeout(botono_startClicking, 500);
 })();
