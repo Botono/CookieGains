@@ -20,11 +20,17 @@
 
 
 	function sellAndClick() {
+		updateCursorAmount();
 		setTimeout(sellAndClick_worker, 250);
 	}
 
 	function justClick() {
+		updateCursorAmount();
 		setTimeout(justClick_worker, 250);
+	}
+
+	function updateCursorAmount() {
+		cursorAmount = Game.Objects['Cursor'].amount;
 	}
 
 	function sellAndClick_worker() {
