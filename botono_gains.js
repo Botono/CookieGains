@@ -5,13 +5,14 @@
 	var sellAndClickButton = document.createElement('button');
 	var justClickButton = document.createElement('button');
 	var cursorAmount = Game.Objects['Cursor'].amount;
+	var commonCSS = "width:48px; height:48px; background-color:transparent;background-image:url(img/icons.png);border: none; cursor: pointer;";
 
 	buttonContainer.style = "position: relative; top: 120px; left: 5px; width: 246px;";
-	sellAndClickButton.innerHTML = 'Sell';
-	justClickButton.innerHTML = 'Click';
+	sellAndClickButton.title = 'Sell then Click!';
+	justClickButton.title = 'Just Click!';
 	sellAndClickButton.onclick = sellAndClick;
-	sellAndClickButton.style = "float: left;";
-	justClickButton.style = "float: right";
+	sellAndClickButton.style = "float: left; background-position:-1104px -864px; " + commonCSS;
+	justClickButton.style = "float: right; background-position:-576px -624px; " + commonCSS;
 	justClickButton.onclick = justClick;
 
 	buttonContainer.appendChild(sellAndClickButton);
@@ -47,7 +48,6 @@
 		if (botono_Interval.length === 0) {
 			botono_Interval.push(setInterval(botono_click, 1));
 		}
-		console.log(botono_Interval);
 	}
 
 	function botono_stopClicking() {
@@ -56,7 +56,6 @@
 				clearInterval(interval);
 				return false;
 			});
-			console.log(botono_Interval);
 		}
 	}
 
