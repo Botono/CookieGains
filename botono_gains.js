@@ -19,30 +19,28 @@
 	botono_bigCookie.appendChild(buttonContainer);
 
 
-	function sellAndClick() {
+	function sellAndClick(e) {
+		e.stopPropagation();
 		updateCursorAmount();
-		setTimeout(sellAndClick_worker, 250);
+		if (botono_Interval.length === 0) {
+			Game.Objects['Cursor'].sell(cursorAmount); // Sell all cursors
+			setTimeout(startClicking, 100);
+			setTimeout(botono_stopClicking, 10000);
+			Game.Objects['Cursor'].buy(cursorAmount); // Buy all cursors back
+		}
 	}
 
-	function justClick() {
+	function justClick(e) {
+		e.stopPropagation();
 		updateCursorAmount();
-		setTimeout(justClick_worker, 250);
+		if (botono_Interval.length === 0) {
+			setTimeout(startClicking, 100);
+			setTimeout(botono_stopClicking, 10000);
+		}
 	}
 
 	function updateCursorAmount() {
 		cursorAmount = Game.Objects['Cursor'].amount;
-	}
-
-	function sellAndClick_worker() {
-		Game.Objects['Cursor'].sell(cursorAmount); // Sell all cursors
-		startClicking();
-		setTimeout(botono_stopClicking, 10000);
-		Game.Objects['Cursor'].buy(cursorAmount); // Buy all cursors back
-	}
-
-	function justClick_worker() {
-		startClicking();
-		setTimeout(botono_stopClicking, 10000);
 	}
 
 	function startClicking() {
