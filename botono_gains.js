@@ -36,7 +36,7 @@
 
 	function justClick_worker() {
 		botono_Interval.push(setInterval(botono_click, 1));
-		setTimeout(botono_stopClicking, 2000);
+		setTimeout(botono_stopClicking, 10000);
 	}
 
 	function botono_stopClicking() {
