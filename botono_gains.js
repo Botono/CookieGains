@@ -1,5 +1,5 @@
 (function () {
-	var botono_Interval = null;
+	var botono_Interval = [];
 	var botono_bigCookie = document.getElementById('bigCookie');
 	var buttonContainer = document.createElement('div');
 	var sellAndClickButton = document.createElement('button');
@@ -35,25 +35,31 @@
 
 	function sellAndClick_worker() {
 		Game.Objects['Cursor'].sell(cursorAmount); // Sell all cursors
-		botono_startClicking()
+		startClicking();
 		setTimeout(botono_stopClicking, 10000);
 		Game.Objects['Cursor'].buy(cursorAmount); // Buy all cursors back
 	}
 
 	function justClick_worker() {
-		botono_startClicking()
+		startClicking();
 		setTimeout(botono_stopClicking, 10000);
 	}
 
-	function botono_startClicking() {
-		if (botono_Interval !== null) {
-			botono_Interval = setInterval(botono_click, 1);
+	function startClicking() {
+		if (botono_Interval.length === 0) {
+			botono_Interval.push(setInterval(botono_click, 1));
 		}
+		console.log(botono_Interval);
 	}
 
 	function botono_stopClicking() {
-		clearInterval(botono_Interval);
-		botono_Interval = null;
+		if (botono_Interval.length > 0) {
+			botono_Interval = botono_Interval.filter(function (interval) {
+				clearInterval(interval);
+				return false;
+			});
+			console.log(botono_Interval);
+		}
 	}
 
 	function botono_click() {
