@@ -1,11 +1,20 @@
 (function () {
-	var botono_Interval = [];
-	var botono_bigCookie = document.getElementById('bigCookie');
-	var buttonContainer = document.createElement('div');
-	var sellAndClickButton = document.createElement('button');
-	var justClickButton = document.createElement('button');
-	var cursorAmount = Game.Objects['Cursor'].amount;
-	var commonCSS = "width:48px; height:48px; background-color:transparent;background-image:url(img/icons.png);border: none; cursor: pointer;";
+	var theIntervals = [],
+		bigCookie = document.getElementById('bigCookie'),
+		buttonContainer = document.createElement('div'),
+		sellAndClickButton = document.createElement('button'),
+		justClickButton = document.createElement('button'),
+		cursorAmount = Game.Objects['Cursor'].amount,
+		commonCSS = "width:48px; height:48px; background-color:transparent;background-image:url(img/icons.png);border: none; cursor: pointer;",
+		clickBuffs = [
+			'Dragonflight',
+			'Click frenzy', // Correct capitalization
+			'Cursed finger',
+		],
+		clickAction = null,
+		clickDuration = 10000,
+		clickDurationBuff = 2000;
+
 
 	buttonContainer.style = "position: relative; top: 120px; left: 5px; width: 246px;";
 	sellAndClickButton.title = 'Sell then Click!';
@@ -17,26 +26,34 @@
 
 	buttonContainer.appendChild(sellAndClickButton);
 	buttonContainer.appendChild(justClickButton);
-	botono_bigCookie.appendChild(buttonContainer);
+	bigCookie.appendChild(buttonContainer);
 
 
 	function sellAndClick(e) {
-		e.stopPropagation();
+		if (e) {
+			e.stopPropagation();
+		}
+
 		updateCursorAmount();
-		if (botono_Interval.length === 0) {
+		clickAction = 'sellAndClick';
+		if (theIntervals.length === 0) {
 			Game.Objects['Cursor'].sell(cursorAmount); // Sell all cursors
 			setTimeout(startClicking, 100);
-			setTimeout(botono_stopClicking, 10000);
+			setTimeout(stopClicking, getClickDuration());
 			Game.Objects['Cursor'].buy(cursorAmount); // Buy all cursors back
 		}
 	}
 
 	function justClick(e) {
-		e.stopPropagation();
+		if (e) {
+			e.stopPropagation();
+		}
+
 		updateCursorAmount();
-		if (botono_Interval.length === 0) {
+		clickAction = 'justClick';
+		if (theIntervals.length === 0) {
 			setTimeout(startClicking, 100);
-			setTimeout(botono_stopClicking, 10000);
+			setTimeout(stopClicking, getClickDuration());
 		}
 	}
 
@@ -45,21 +62,55 @@
 	}
 
 	function startClicking() {
-		if (botono_Interval.length === 0) {
-			botono_Interval.push(setInterval(botono_click, 1));
+		if (theIntervals.length === 0) {
+			theIntervals.push(setInterval(doTheClick, 1));
 		}
 	}
 
-	function botono_stopClicking() {
-		if (botono_Interval.length > 0) {
-			botono_Interval = botono_Interval.filter(function (interval) {
+	function stopClicking() {
+		if (theIntervals.length > 0) {
+			theIntervals = theIntervals.filter(function (interval) {
 				clearInterval(interval);
 				return false;
 			});
 		}
+
+		if (clickingBuffActive()) {
+			// Keep on clicking!
+			switch (clickAction) {
+				case 'sellAndClick':
+					sellAndClick();
+					break;
+				default:
+					justClick();
+					break;
+			}
+		} else {
+			clickAction = null;
+		}
 	}
 
-	function botono_click() {
-		botono_bigCookie.click();
+	function doTheClick() {
+		bigCookie.click();
+	}
+
+	function getClickDuration () {
+		if (clickingBuffActive()) {
+			return clickDurationBuff;
+		}
+		return clickDuration;
+	}
+
+	function clickingBuffActive () {
+		if (Game.buffs) {
+			return clickBuffs.some(function (v) {
+				// Keep clicking if the right buff is active and it has at least 1 second remaining.
+				if (Game.buffs[v]) {
+					return (Game.buffs[v].maxTime - Game.buffs[v].time) >= 30;
+				}
+				return false;
+			});
+		}
+		return false;
 	}
 })();
