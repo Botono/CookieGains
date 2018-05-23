@@ -11,7 +11,7 @@
 			'Click frenzy', // Correct capitalization
 			'Cursed finger',
 		],
-		clickAction = null,
+		usingSellAndClick = false,
 		clickDuration = 10000,
 		clickDurationBuff = 2000;
 
@@ -35,8 +35,8 @@
 		}
 
 		updateCursorAmount();
-		clickAction = 'sellAndClick';
 		if (theIntervals.length === 0) {
+			usingSellAndClick = true;
 			Game.Objects['Cursor'].sell(cursorAmount); // Sell all cursors
 			setTimeout(startClicking, 100);
 			setTimeout(stopClicking, clickDuration);
@@ -50,8 +50,8 @@
 		}
 
 		updateCursorAmount();
-		clickAction = 'justClick';
 		if (theIntervals.length === 0) {
+			usingSellAndClick = false;
 			setTimeout(startClicking, 100);
 			setTimeout(stopClicking, getClickDuration());
 		}
@@ -77,16 +77,13 @@
 
 		if (clickingBuffActive()) {
 			// Keep on clicking!
-			switch (clickAction) {
-				case 'sellAndClick':
-					sellAndClick();
-					break;
-				default:
-					justClick();
-					break;
+			if (usingSellAndClick) {
+				sellAndClick();
+			} else {
+				justClick();
 			}
 		} else {
-			clickAction = null;
+			usingSellAndClick = false;
 		}
 	}
 
