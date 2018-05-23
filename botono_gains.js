@@ -39,7 +39,7 @@
 		if (theIntervals.length === 0) {
 			Game.Objects['Cursor'].sell(cursorAmount); // Sell all cursors
 			setTimeout(startClicking, 100);
-			setTimeout(stopClicking, getClickDuration());
+			setTimeout(stopClicking, clickDuration);
 			Game.Objects['Cursor'].buy(cursorAmount); // Buy all cursors back
 		}
 	}
@@ -104,9 +104,9 @@
 	function clickingBuffActive () {
 		if (Game.buffs) {
 			return clickBuffs.some(function (v) {
-				// Keep clicking if the right buff is active and it has at least 1 second remaining.
+				// Keep clicking if the right buff is active and it has at least 2 second remaining.
 				if (Game.buffs[v]) {
-					return (Game.buffs[v].maxTime - Game.buffs[v].time) >= 30;
+					return (Game.buffs[v].maxTime - Game.buffs[v].time) >= 60;
 				}
 				return false;
 			});
