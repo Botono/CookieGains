@@ -103,10 +103,19 @@
 		castSpellIfReady();
 		if (clickingBuffActive()) {
 			sellAndClick();
-			if (Game.buffs['Elder frenzy']) {
+
+			// Frenzy + Building Buff + Click Buff = USE ALL THE THINGS
+			console.log('Building Buffs Active: '+ buildingBuffCount);
+			console.log('Frenzy is active: ' + JSON.stringify(Game.buffs['Frenzy'] !== undefined));
+			if (Game.buffs['Frenzy'] && buildingBuffCount > 0) {
+				EVERYONE();
+			}
+
+			if (Game.buffs['Elder frenzy'] && numberOfWrinklers()) {
 				msg('Popping all wrinklers due to Elder Frenzy buff!', buttonContainer, true);
 				Game.CollectWrinklers();
 			}
+			
 		}
 	}, 1000, true);
 
@@ -175,14 +184,19 @@
 		if (clickingBuffActive()) {
 			// Keep on clicking!
 			if (usingSellAndClick) {
-				msg('MORE!', sellAndClickButton);
+				msg('MORE!', buttonContainer, true);
 				sellAndClick();
 			} else {
-				msg('AGAIN!', justClickButton);
+				msg('AGAIN!', buttonContainer, true);
 				justClick();
 			}
 		} else {
 			msg('WHEW! Done...', buttonContainer, true);
+
+			if (Game.Has('Golden switch [off]')) { // If Golden Switch is ON, turn it off
+				Game.UpgradesById[undoGoldenSwitchID].buy();
+			}
+
 			usingSellAndClick = false;
 		}
 	}
@@ -212,7 +226,6 @@
 			var clickBuffFound = clickBuffs.some(function (v) {
 				// Keep clicking if the right buff is active and it has at least 7% of its time remaining.
 				if (Game.buffs[v]) {
-					// return (Game.buffs[v].maxTime - Game.buffs[v].time) >= 60;
 					return (Game.buffs[v].time / Game.buffs[v].maxTime) >= 0.07;
 				}
 				return false;
@@ -225,8 +238,7 @@
 
 	function haveEnoughMana(grim) {
 		var spell = grim.spells['hand of fate'];
-		if (grim.magic >= (spell.costPercent * grim.magicM) + spell.costMin) {
-			// console.log('Enough Mana! ' + (spell.costPercent * grim.magicM) + spell.costMin );
+		if (grim.magic >= ((spell.costPercent * grim.magicM) + spell.costMin)) {
 			return true;
 		}
 		return false;
@@ -254,12 +266,32 @@
 		}
 	}
 
+	function EVERYONE() {
+		// Golden Switch and Sugar Frenzy
+		if (Game.Has('Golden switch [on]')) {
+			msg('ALL THE BUFFS!');
+			for (var i in gameUpgradeIDs) {
+				Game.UpgradesById[gameUpgradeIDs[i]].buy();
+			}
+		}
+	}
+
+	function numberOfWrinklers() {
+		var num = 0;
+		for (var i=0; Game.wrinklers[i]; i++) {
+			if (Game.wrinklers[i].close == 1) {
+				num += 1;
+			}
+		}
+		return num;
+	}
+
 	function fullAuto() {
 		var buttonObj = document.getElementById('botono_FullAutoButton');
 		if (fullAutoIntervals.length === 0) {
 			fullAutoIntervals.push(setInterval(autoClicker, 1000));
 			buttonObj.style = fullAutoActiveStyle;
-			msg('Full Auto Mode ACTIVED', buttonObj);
+			msg('Full Auto Mode ACTIVATED', buttonObj);
 		} else {
 			// If Full Auto Mode is on, toggle it off
 			fullAutoIntervals = fullAutoIntervals.filter(function (interval) {
