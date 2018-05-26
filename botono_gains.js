@@ -16,6 +16,23 @@
 			'Cursed finger',
 			'Elder frenzy',
 		],
+		buildingBuffs = [
+			'High-five',
+			'Congregation',
+			'Luxuriant harvest',
+			'Ore vein',
+			'Oiled-up',
+			'Juicy profits',
+			'Fervent adoration',
+			'Manabloom',
+			'Delicious lifeforms',
+			'Breakthrough',
+			'Righteous cataclysm',
+			'Golden ages',
+			'Extra cycles',
+			'Solar flare',
+			'Winning streak',
+		],
 		gameUpgradeIDs = [331, 452], // Golden Switch and Sugar Frenzy, Game.UpgradesById[331].buy()
 		undoGoldenSwitchID = 332,
 		usingSellAndClick = false,
@@ -24,13 +41,19 @@
 		maxCursorsToSell = 500,
 		fullAutoActiveStyle = "position:absolute; bottom:0; left:100px;background-position:-1200px -337px; " + commonCSS,
 		fullAutoDisabledStyle = "position:absolute; bottom:0; left:100px;background-position:-480px -1px; " + commonCSS,
-		buildingBuffCount = 0;
+		buildingBuffCount = 0,
+		spellsContainer = document.getElementById('rowSpecial7');
 
 	// DOM stuff
 
 	// Clear existing UI
 	if (oldContainer !== null ) {
 		oldContainer.parentNode.removeChild(oldContainer);
+	}
+
+	// Open Grimoire
+	if (spellsContainer.style.display !== 'block') {
+		Game.ObjectsById[7].switchMinigame(-1);
 	}
 
 	// while (buttonContainer.firstChild) {
@@ -60,6 +83,33 @@
 	buttonContainer.appendChild(fullAutoButton);
 	bigCookie.appendChild(buttonContainer);
 
+	// https://davidwalsh.name/javascript-debounce-function
+	function debounce(func, wait, immediate) {
+		var timeout;
+		return function () {
+			var context = this, args = arguments;
+			var later = function () {
+				timeout = null;
+				if (!immediate) func.apply(context, args);
+			};
+			var callNow = immediate && !timeout;
+			clearTimeout(timeout);
+			timeout = setTimeout(later, wait);
+			if (callNow) func.apply(context, args);
+		};
+	};
+
+	var checkBuffs = debounce(function () {
+		castSpellIfReady();
+		if (clickingBuffActive()) {
+			sellAndClick();
+			if (Game.buffs['Elder frenzy']) {
+				msg('Popping all wrinklers due to Elder Frenzy buff!', buttonContainer, true);
+				Game.CollectWrinklers();
+			}
+		}
+	}, 1000, true);
+
 	function msg(msg, el, center) {
 		if (el === undefined) {
 			Game.Popup(msg);
@@ -67,7 +117,7 @@
 			var rect = el.getBoundingClientRect(),
 				x = center ? rect.left + (rect.right-rect.left)/2 : rect.left,
 				y = center ? rect.bottom + (rect.top - rect.bottom) / 2: rect.top;
-			console.log('msg() DEBUG: x: ' + x + ', y: '+ y);
+			// console.log('msg() DEBUG: x: ' + x + ', y: '+ y);
 			Game.Popup(msg, x, y);
 		}
 
@@ -124,7 +174,6 @@
 
 		if (clickingBuffActive()) {
 			// Keep on clicking!
-			console.log('Going to keep clicking for a while!');
 			if (usingSellAndClick) {
 				msg('MORE!', sellAndClickButton);
 				sellAndClick();
@@ -149,29 +198,60 @@
 		return clickDuration;
 	}
 
+	// States to click during:
+	// - Any buff in clickBuffs is present
+	// - 2 building buffs together
 	function clickingBuffActive() {
 		if (Game.buffs) {
-			console.log(Game.buffs);
 			buildingBuffCount = 0;
-			Game.buffs.forEach(function (buff) {
-				console.log('Buff Type: ' + Game.buffs[buff].type.name);
-				if (Game.buffs[buff].type.name == 'building buff') {
+			buildingBuffs.forEach(function (buff) {
+				if (Game.buffs[buff]) {
 					buildingBuffCount++;
 				}
 			});
-			msg('Number of Building Buffs: '+ buildingBuffCount);
-			return clickBuffs.some(function (v) {
+			var clickBuffFound = clickBuffs.some(function (v) {
 				// Keep clicking if the right buff is active and it has at least 7% of its time remaining.
 				if (Game.buffs[v]) {
-					console.log('Found buff: '+ v);
-					console.log('Time remianing: ' + (Game.buffs[v].time / Game.buffs[v].maxTime));
 					// return (Game.buffs[v].maxTime - Game.buffs[v].time) >= 60;
 					return (Game.buffs[v].time / Game.buffs[v].maxTime) >= 0.07;
 				}
 				return false;
 			});
+
+			return (buildingBuffs > 1) || clickBuffFound;
 		}
 		return false;
+	}
+
+	function haveEnoughMana(grim) {
+		var spell = grim.spells['hand of fate'];
+		if (grim.magic >= (spell.costPercent * grim.magicM) + spell.costMin) {
+			// console.log('Enough Mana! ' + (spell.costPercent * grim.magicM) + spell.costMin );
+			return true;
+		}
+		return false;
+	}
+
+	// Game.Objects['Wizard tower'].minigame
+	// Useful children of that object:
+	// - magic
+	// - magicM
+	// - spells {}
+	// - spells['hand of fate'].costMin
+	// - spells[].costPercent
+	// DOM ID of 'Force Hand of Fate': grimoireSpell1
+	// works to cast: document.getElementById('grimoireSpell1').click();
+	function castSpellIfReady() {
+		var grim = Game.Objects['Wizard tower'].minigame;
+		if (Game.buffs['Frenzy']) {
+			for (buff in buildingBuffs) {
+				if (Game.buffs[buff] && haveEnoughMana(grim)) {
+					msg('Casting "Force Hand of Fate"! Good luck!');
+					document.getElementById('grimoireSpell1').click();
+					break;
+				}
+			}
+		}
 	}
 
 	function fullAuto() {
@@ -193,25 +273,28 @@
 
 	function autoClicker() {
 		Game.shimmers.forEach(function (shimmer) {
-			if (shimmer.type == 'reindeer' || shimmer.type == 'golden') {
+			if (shouldPopShimmer(shimmer)) {
 				shimmer.pop();
-				console.log('Popped a '+ shimmer.type + ':');
-				console.log(shimmer);
 				checkBuffs();
 			}
 		});
 
 	}
 
-	function checkBuffs() {
-		console.log('Checking buff stack.');
-		if (clickingBuffActive()) {
-			console.log('Found the right buffs, time to sell and click.');
-			sellAndClick();
-			if (Game.buffs['Elder frenzy']) {
-				console.log('Popping all wrinklers due to Elder Frenzy buff!');
-				Game.CollectWrinklers();
-			}
+	function shouldPopShimmer(shimmer) {
+		var shouldPop = false;
+
+		switch (shimmer.type) {
+			case 'reindeer':
+				shouldPop = true;
+				break;
+			case 'golden':
+				if (!shimmer.wrath || (shimmer.wrath && shimmer.forceObj == 0)) {
+					shouldPop = true;
+				}
+				break;
 		}
+
+		return shouldPop;
 	}
 })();
