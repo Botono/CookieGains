@@ -23,7 +23,8 @@
 		clickDurationBuff = 2000,
 		maxCursorsToSell = 500,
 		fullAutoActiveStyle = "position:absolute; bottom:0; left:100px;background-position:-1200px -337px; " + commonCSS,
-		fullAutoDisabledStyle = "position:absolute; bottom:0; left:100px;background-position:-480px -1px; " + commonCSS;
+		fullAutoDisabledStyle = "position:absolute; bottom:0; left:100px;background-position:-480px -1px; " + commonCSS,
+		buildingBuffCount = 0;
 
 	// DOM stuff
 
@@ -31,7 +32,7 @@
 	if (oldContainer !== null ) {
 		oldContainer.parentNode.removeChild(oldContainer);
 	}
-	
+
 	// while (buttonContainer.firstChild) {
 	// 	buttonContainer.removeChild(buttonContainer.firstChild);
 	// }
@@ -52,8 +53,8 @@
 	justClickButton.id = 'botono_JustClickButton';
 	sellAndClickButton.id = 'botono_SellAndClickButton';
 	fullAutoButton.id = 'botono_FullAutoButton';
-	
-	
+
+
 	buttonContainer.appendChild(sellAndClickButton);
 	buttonContainer.appendChild(justClickButton);
 	buttonContainer.appendChild(fullAutoButton);
@@ -64,9 +65,8 @@
 			Game.Popup(msg);
 		} else {
 			var rect = el.getBoundingClientRect(),
-
 				x = center ? rect.left + (rect.right-rect.left)/2 : rect.left,
-				y = center ? rect.bottom + (rect.right - rect.left) / 2: rect.top;
+				y = center ? rect.bottom + (rect.top - rect.bottom) / 2: rect.top;
 			console.log('msg() DEBUG: x: ' + x + ', y: '+ y);
 			Game.Popup(msg, x, y);
 		}
@@ -75,7 +75,7 @@
 	}
 
 	function sellAndClick(e) {
-		
+
 		if (e) {
 			e.stopPropagation();
 		}
@@ -152,6 +152,14 @@
 	function clickingBuffActive() {
 		if (Game.buffs) {
 			console.log(Game.buffs);
+			buildingBuffCount = 0;
+			Game.buffs.forEach(function (buff) {
+				console.log('Buff Type: ' + Game.buffs[buff].type.name);
+				if (Game.buffs[buff].type.name == 'building buff') {
+					buildingBuffCount++;
+				}
+			});
+			msg('Number of Building Buffs: '+ buildingBuffCount);
 			return clickBuffs.some(function (v) {
 				// Keep clicking if the right buff is active and it has at least 7% of its time remaining.
 				if (Game.buffs[v]) {
