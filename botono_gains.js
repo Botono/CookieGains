@@ -3,6 +3,7 @@
 	var clickIntervals = [],
 		fullAutoIntervals = [],
 		bigCookie = document.getElementById('bigCookie'),
+		oldContainer = document.getElementById('botono_ButtonContainer'),
 		buttonContainer = document.createElement('div'),
 		sellAndClickButton = document.createElement('button'),
 		justClickButton = document.createElement('button'),
@@ -25,6 +26,15 @@
 		fullAutoDisabledStyle = "position:absolute; bottom:0; left:100px;background-position:-480px -1px; " + commonCSS;
 
 	// DOM stuff
+
+	// Clear existing UI
+	if (oldContainer !== null ) {
+		oldContainer.parentNode.removeChild(oldContainer);
+	}
+	
+	// while (buttonContainer.firstChild) {
+	// 	buttonContainer.removeChild(buttonContainer.firstChild);
+	// }
 	buttonContainer.style = "position: relative; top: 0; left: 5px; width: 246px; height: 246px;";
 
 	sellAndClickButton.title = 'Sell then Click!';
@@ -38,24 +48,41 @@
 	sellAndClickButton.onclick = sellAndClick;
 	fullAutoButton.onclick = fullAuto;
 
+	buttonContainer.id = 'botono_ButtonContainer';
 	justClickButton.id = 'botono_JustClickButton';
 	sellAndClickButton.id = 'botono_SellAndClickButton';
 	fullAutoButton.id = 'botono_FullAutoButton';
-
+	
+	
 	buttonContainer.appendChild(sellAndClickButton);
 	buttonContainer.appendChild(justClickButton);
 	buttonContainer.appendChild(fullAutoButton);
 	bigCookie.appendChild(buttonContainer);
 
+	function msg(msg, el, center) {
+		if (el === undefined) {
+			Game.Popup(msg);
+		} else {
+			var rect = el.getBoundingClientRect(),
+
+				x = center ? rect.left + (rect.right-rect.left)/2 : rect.left,
+				y = center ? rect.bottom + (rect.right - rect.left) / 2: rect.top;
+			console.log('msg() DEBUG: x: ' + x + ', y: '+ y);
+			Game.Popup(msg, x, y);
+		}
+
+		console.log(msg); // Debug
+	}
 
 	function sellAndClick(e) {
-		console.log('Selling cursors and starting to click!');
+		
 		if (e) {
 			e.stopPropagation();
 		}
 
 		updateCursorAmount();
 		if (clickIntervals.length === 0) {
+			msg('DUMP AND PUMP', sellAndClickButton);
 			usingSellAndClick = true;
 			Game.Objects['Cursor'].sell(cursorAmount); // Sell all cursors
 			setTimeout(startClicking, 100);
@@ -99,12 +126,14 @@
 			// Keep on clicking!
 			console.log('Going to keep clicking for a while!');
 			if (usingSellAndClick) {
+				msg('MORE!', sellAndClickButton);
 				sellAndClick();
 			} else {
+				msg('AGAIN!', justClickButton);
 				justClick();
 			}
 		} else {
-			console.log('Done clicking!');
+			msg('WHEW! Done...', buttonContainer, true);
 			usingSellAndClick = false;
 		}
 	}
@@ -138,18 +167,19 @@
 	}
 
 	function fullAuto() {
+		var buttonObj = document.getElementById('botono_FullAutoButton');
 		if (fullAutoIntervals.length === 0) {
 			fullAutoIntervals.push(setInterval(autoClicker, 1000));
-			document.getElementById('botono_FullAutoButton').style = fullAutoActiveStyle;
-			console.log('Full Auto Mode ACTIVE');
+			buttonObj.style = fullAutoActiveStyle;
+			msg('Full Auto Mode ACTIVED', buttonObj);
 		} else {
 			// If Full Auto Mode is on, toggle it off
 			fullAutoIntervals = fullAutoIntervals.filter(function (interval) {
 				clearInterval(interval);
 				return false;
 			});
-			document.getElementById('botono_FullAutoButton').style = fullAutoDisabledStyle;
-			console.log('Full Auto Mode DISABLED');
+			buttonObj.style = fullAutoDisabledStyle;
+			msg('Full Auto Mode DISABLED', buttonObj);
 		}
 	}
 
