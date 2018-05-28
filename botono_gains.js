@@ -1,6 +1,16 @@
 (function () {
 	// Initialization
-	var clickIntervals = [],
+	Game.botono = {};
+	Game.botono.stats = {
+		startingCookies: Game.cookies,
+		fullAutoStart: null,
+		fullAutoEnd: null,
+		autoClickStart: null,
+		autoClickEnd: null,
+		log: [],
+	};
+	var b = Game.botono,
+		clickIntervals = [],
 		fullAutoIntervals = [],
 		bigCookie = document.getElementById('bigCookie'),
 		oldContainer = document.getElementById('botono_ButtonContainer'),
@@ -42,7 +52,11 @@
 		fullAutoActiveStyle = "position:absolute; bottom:0; left:100px;background-position:-1200px -337px; " + commonCSS,
 		fullAutoDisabledStyle = "position:absolute; bottom:0; left:100px;background-position:-480px -1px; " + commonCSS,
 		buildingBuffCount = 0,
-		spellsContainer = document.getElementById('rowSpecial7');
+		spellsContainer = document.getElementById('rowSpecial7')
+		FULL_AUTO = 'Full Auto Mode',
+		AUTO_CLICK = 'Auto Clicking';
+
+	b.stats
 
 	// DOM stuff
 
@@ -99,6 +113,18 @@
 		};
 	};
 
+	function logCookies(type, when, startCookies, endCookies, buffs) {
+		var logObj = {
+			type: type,
+			when: when,
+			startCookies: startCookies,
+			endCookies: endCookies,
+			buffs: buffs || null,
+		}
+		b.stats.log.push(logObj);
+		console.table(logObj);
+	}
+
 	var checkBuffs = debounce(function () {
 		castSpellIfReady();
 		if (clickingBuffActive()) {
@@ -147,6 +173,7 @@
 			setTimeout(startClicking, 100);
 			setTimeout(stopClicking, clickDuration);
 			Game.Objects['Cursor'].buy(cursorAmount); // Buy all cursors back
+			b.stats.autoClickStart = Game.cookies;
 		}
 	}
 
@@ -198,6 +225,7 @@
 			}
 
 			usingSellAndClick = false;
+			logCookies(AUTO_CLICK, Date.now(), b.stats.autoClickStart, Game.cookies);
 		}
 	}
 
@@ -291,6 +319,7 @@
 		if (fullAutoIntervals.length === 0) {
 			fullAutoIntervals.push(setInterval(autoClicker, 1000));
 			buttonObj.style = fullAutoActiveStyle;
+			b.stats.fullAutoStart = Game.cookies;
 			msg('Full Auto Mode ACTIVATED', buttonObj);
 		} else {
 			// If Full Auto Mode is on, toggle it off
@@ -299,6 +328,7 @@
 				return false;
 			});
 			buttonObj.style = fullAutoDisabledStyle;
+			logCookies(FULL_AUTO, Date.now(), b.stats.fullAutoStart, Game.cookies);
 			msg('Full Auto Mode DISABLED', buttonObj);
 		}
 	}
